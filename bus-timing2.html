@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Check ya bus</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      #busStopID {
+        width: 150px;
+        padding: 2px;
+      }
+      #data {
+        margin-top: 20px;
+        border: 1px solid #ddd;
+        padding: 10px;
+        background-color: #f9f9f9;
+        word-wrap: break-word;
+        text-align: left;
+        border-radius: 4px;
+      }
+      button {
+        padding: 5px;
+        border-radius: 4px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      #enteredBusStop {
+        color: #45a049;
+      }
+      #dataTable {
+        display: none;
+      }
+      tr {
+        border-bottom: 1px solid #ddd;
+      }
+      tbody > tr:hover {
+        background-color: #d6eeee;
+      }
+      tbody > tr {
+        text-align: center;
+      }
+      tr > td {
+        width: 100px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Check Bus Timings</h1>
+    <input id="busStopID" placeholder="Enter Bus Stop Number" />
+    <button id="fetchData">Check Bus!</button>
+
+    <div id="data">
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>Bus Stop:</th>
+            <th id="enteredBusStop"></th>
+          </tr>
+          <tr>
+            <th>Bus No</th>
+            <th colspan="3" style="text-align: center; border: 1px solid black">
+              Timings
+            </th>
+            <!-- <th></th>
+            <th></th> -->
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows will be appended here -->
+        </tbody>
+      </table>
+    </div>
+    <script>
+      // Function to calculate time difference in minutes
+      function getTimeDifferenceInMinutes(givenTime) {
+        // Parse the given timestamp into a Date object
+        var givenDate = new Date(givenTime);
+        // Get the current time
+        var currentDate = new Date();
+        // Calculate the difference in milliseconds
+        var timeDifference = givenDate - currentDate;
+        // Convert milliseconds to minutes
+        var differenceInMinutes = Math.floor(timeDifference / (1000 * 60));
+        return differenceInMinutes;
+      }
+      $("#fetchData").click(function () {
+        const busStopID = $("#busStopID").val();
+        $("#enteredBusStop").text(busStopID);
+        var url_new = "http://127.0.0.1:5000/api/posts/" + busStopID;
+        console.log(url_new);
+        var settings = {
+          url: url_new,
+          method: "GET",
+          timeout: 0,
+        };
+
+        $.ajax(settings).done(function (response) {
+          $("#dataTable tbody").empty();
+          console.log(JSON.stringify(response.Services));
+          if (response.Services.length == 0) {
+            $("#data").text("It's late! No busses are running :(");
+            console.log("null");
+          } else {
+            $("#dataTable").css("display", "block");
+            if (Array.isArray(response.Services)) {
+              response.Services.forEach(function (item) {
+                var output = "";
+                // Extract values from each object
+                var serviceno = item.ServiceNo;
+                var nextbus = getTimeDifferenceInMinutes(
+                  item.NextBus.EstimatedArrival
+                );
+                if (nextbus <= 0) {
+                  nextbus = "Arr";
+                }
+                var subbus = getTimeDifferenceInMinutes(
+                  item.NextBus2.EstimatedArrival
+                );
+                var subbus2 = getTimeDifferenceInMinutes(
+                  item.NextBus3.EstimatedArrival
+                );
+                // Append the values to the output string
+                output +=
+                  "ID: " +
+                  serviceno +
+                  ", nextbus: " +
+                  nextbus +
+                  ", subbus: " +
+                  subbus +
+                  "<br/>";
+                console.log(output);
+                // Append the new row to the table
+                $("#dataTable tbody").append(
+                  "<tr>" +
+                    "<td style='border-right: 1px solid black;'>" +
+                    serviceno +
+                    "</td>" +
+                    "<td>" +
+                    nextbus +
+                    "</td>" +
+                    "<td>" +
+                    subbus +
+                    "</td>" +
+                    "<td>" +
+                    subbus2 +
+                    "</td>" +
+                    "</tr>"
+                );
+              });
+            }
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
