@@ -96,12 +96,15 @@
       $("#fetchData").click(function () {
         const busStopID = $("#busStopID").val();
         $("#enteredBusStop").text(busStopID);
-        var url_new = "http://127.0.0.1:5000/api/posts/" + busStopID;
+        var url_new = "https://datamall2.mytransport.sg/ltaodataservice/v3/BusArrival" + busStopID;
         console.log(url_new);
         var settings = {
           url: url_new,
           method: "GET",
           timeout: 0,
+          "headers": {
+            "AccountKey": API_KEY
+          },
         };
 
         $.ajax(settings).done(function (response) {
